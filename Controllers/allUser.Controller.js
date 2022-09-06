@@ -1,7 +1,3 @@
-const fs = require('fs');
-const {
-    resolve
-} = require('path');
 const DataBase = require('../Utilities/accessDb');
 
 module.exports.allUsers = (req, res) => {
@@ -10,11 +6,15 @@ module.exports.allUsers = (req, res) => {
     } = req.query;
     limit = parseInt(limit);
     console.log(limit);
-    DataBase.readDb()
-        .then(usersArray => {
-            usersArray = JSON.parse(usersArray);
-            res.send(usersArray.slice(0, limit))
-        });
+    if (!limit) {
+        res.send("Please Provide an limit");
+    } else {
+        DataBase.readDb()
+            .then(usersArray => {
+                usersArray = JSON.parse(usersArray);
+                res.send(usersArray.slice(0, limit))
+            });
+    }
 
 
 }
@@ -80,15 +80,11 @@ module.exports.updateUser = (req, res) => {
             // selectedUser.contact = req.body.contact;
             // selectedUser.address = req.body.address;
             // selectedUser.photoUrl = req.body.photoUrl;
-            if (!selectedUser) {
-                res.send("User not found");
-            } else {
-                Object.assign(selectedUser, req.body)
+            Object.assign(selectedUser, req.body)
 
 
-                DataBase.writeDb(allUsers)
-                    .then(sig => res.status(200).send(allUsers))
-            }
+            DataBase.writeDb(allUsers)
+                .then(sig => res.status(200).send(allUsers))
         })
 };
 
