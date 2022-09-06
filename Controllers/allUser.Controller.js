@@ -1,9 +1,20 @@
 const fs = require('fs');
+const {
+    resolve
+} = require('path');
 const DataBase = require('../Utilities/accessDb');
 
 module.exports.allUsers = (req, res) => {
+    let {
+        limit
+    } = req.query;
+    limit = parseInt(limit);
+    console.log(limit);
     DataBase.readDb()
-        .then(usersArray => res.send(usersArray))
+        .then(usersArray => {
+            usersArray = JSON.parse(usersArray);
+            res.send(usersArray.slice(0, limit))
+        });
 
 
 }
@@ -29,10 +40,16 @@ module.exports.addUser = (req, res) => {
 
     DataBase.readDb()
         .then(usersArray => {
-            usersArray = JSON.parse(usersArray)
-            usersArray.push(req.body)
-            DataBase.writeDb(usersArray)
-                .then(returnRes => res.status(200).send(usersArray))
+            const newUsers = req.body
+            console.log(newUsers);
+            if (!newUsers.Id || !newUsers.gender || !newUsers.name || !newUsers.contact || !newUsers.address || !newUsers.photoUrl) {
+                res.send("Required properties are not provided in the body");
+            } else {
+                usersArray = JSON.parse(usersArray)
+                usersArray.push(req.body)
+                DataBase.writeDb(usersArray)
+                    .then(returnRes => res.status(200).send(usersArray))
+            }
         })
     // fs.readFile('./FakeData/UsersFakeData.json', 'utf-8', (err, data) => {
     //     const usersArray = JSON.parse(data);
@@ -56,18 +73,22 @@ module.exports.updateUser = (req, res) => {
         .then(allUser => {
             allUsers = JSON.parse(allUser)
             let selectedUser = allUsers.find(user => user.Id === parseInt(random));
-            console.log(req.body);
+            // console.log(req.body);
             // selectedUser.Id = req.body.Id;
             // selectedUser.gender = req.body.gender;
             // selectedUser.name = req.body.name;
             // selectedUser.contact = req.body.contact;
             // selectedUser.address = req.body.address;
             // selectedUser.photoUrl = req.body.photoUrl;
-            Object.assign(selectedUser, req.body)
+            if (!selectedUser) {
+                res.send("User not found");
+            } else {
+                Object.assign(selectedUser, req.body)
 
 
-            DataBase.writeDb(allUsers)
-                .then(sig => res.status(200).send(allUsers))
+                DataBase.writeDb(allUsers)
+                    .then(sig => res.status(200).send(allUsers))
+            }
         })
 };
 
